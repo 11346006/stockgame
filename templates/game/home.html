@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section class="main_Leftbody">
+    <section style="width: 100%;">
+        <div class="information">
+            <h2>金幣：<span id="money">{{ player.money }}</span></h2>
+            <h2>等級：<span id="level">{{ player.level }}</span></h2>
+            <h2>經驗：<span id="exp">{{ player.exp }}/ {{ next_level_exp }}</span></h2>
+            <h2>天數：{{player.day}}</h2>
+            <h2>
+                目前階段：
+
+                {% if player.phase == "buy" %}
+                🛒 備貨中 剩餘 <span id="timer">{{ remaining }}</span> 秒
+                {% else %}
+                📦 接單中 剩餘 <span id="timer">{{ remaining }}</span> 秒
+                {% endif %}
+            </h2>
+
+            {% if is_dev %}
+            <h3>🧪 測試模式</h3>
+            {% if player.debug_mode %}
+            <p style="color:green;">DEBUG ON</p>
+
+            <a href="{% url 'force_phase' 'buy' %}">
+                <button>切換到備貨</button>
+            </a>
+
+            <a href="{% url 'force_phase' 'sell' %}">
+                <button>切換到接單</button>
+            </a>
+
+            {% else %}
+            <p style="color:red;">DEBUG OFF</p>
+            {% endif %}
+
+            <a href="{% url 'toggle_debug' %}">
+                <button>切換 Debug 模式</button>
+            </a>
+            {% endif %}
+        </div>
+    </section>
+
+
+
+    <!-- <section
+        style="overflow: hidden;width: 100%;border: 2px solid #000; border-radius: 5px; margin-bottom: 10px;padding: 10px;">
+        <h2 style="margin-bottom: 10px;">熱銷排行</h2>
+        {% for product, qty in hot_products %}
+        <p>
+            {{ forloop.counter }}.
+            {{ product.name }} ｜ {{ qty }}
+        </p>
+        {% endfor %}
+    </section> -->
+
+
+    {% if player.phase == "buy" %}
+
+    <section class="section_card">
+
+        {% for product in products %}
+
+        <div class="card">
+
+            <div>
+                {% if product.image %}
+                <img src="{{ product.image.url }}" class="card_img">
+                {% endif %}
+            </div>
+
+            <div class="card_body">
+
+                <h3 class="card_title">{{ product.name }}</h3>
+
+                <p style="margin-bottom: 5px;">售價：{{ product.price }}</p>
+
+                <form action="{% url 'buy_product' product.id %}" method="post">
+
+                    {% csrf_token %}
+                    <input type="number" name="quantity" value="1" min="1" id="buy_product_input">
+
+                    <button type="submit" class="order_submit">
+                        訂貨
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </section>
+
+    {% else %}
+    <div style="margin-left: auto;">
+        <form action="{% url 'refresh_orders' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="order_submit">
+                🔄 刷新訂單（50金幣）
+            </button>
+        </form>
+    </div>
+    <section class="section_card">
+
+        {% for order in orders %}
+
+        <div class="card">
+            <div>
+                {% if order.product.image %}
+                <img src="{{ order.product.image.url }}" class="card_img">
+                {% endif %}
+            </div>
+            <div class="card_body">
+
+                <h3>👤 {{ order.customer_name }}</h3>
+
+                <p>商品：{{ order.product.name }}</p>
+
+                <p>數量：{{ order.quantity }}</p>
+
+                <p>獎勵：{{ order.reward }}</p>
+
+                <a href="{% url 'deliver_order' order.id %}" class="order_submit">
+                    <button class="order_submit">出貨</button>
+                </a>
+
+            </div>
+
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+</section>
+<aside>
+    <div style="display: flex; justify-content: space-between;align-items: center;margin-bottom: 15px;">
+        <h2>📦 庫存狀態</h2>
+        <div>
+            <h3>倉庫容量</h3>
+            <p>{{ used_capacity }} / {{ capacity }}</p>
+        </div>
+    </div>
+    {% for item in inventory_display %}
+    <div class="product_stock_body">
+
+        <h3>{{ item.name }}</h3>
+        庫存：
+        {% if item.qty > 10 %}
+        🟢 {{ item.qty }}（充足）
+        {% elif item.qty > 0 %}
+        🟡 {{ item.qty }}（偏少）
+        {% else %}
+        🔴 缺貨
+        {% endif %}
+
+    </div>
+    {% empty %}
+    <p>倉庫是空的</p>
+    {% endfor %}
+</aside>
+<div id="toast-container"></div>
+
+<div id="eventPopup" class="popup">
+
+    <div class="popup_header">
+        {% if event %}
+        <p>{{ event.title }} - {{ event.description }}</p>
+        {% else %}
+        <p>正常市場</p>
+        {% endif %}
+        <a href="#" onclick="closePopup()">X</a>
+    </div>
+    <div class="popup_body">
+        {% if event %}
+
+
+        <p>{{ event.description }}</p>
+
+        {% else %}
+
+
+        {% endif %}
+    </div>
+</div>
+{% if messages %}
+{% for message in messages %}
+<script>
+    showToast("{{ message }}", "{{ message.tags }}");
+</script>
+{% endfor %}
+{% endif %}
+{% endblock content %}

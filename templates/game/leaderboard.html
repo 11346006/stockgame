@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+    <div class="leaderboard">
+
+        <h1 class="leaderboard_title">
+            🏆 全球排行榜
+        </h1>
+
+        {% if players|length >= 1 %}
+        <div class="podium">
+
+            <!-- 第二名 -->
+            {% if players|length >= 2 %}
+            <div class="podium_item silver">
+                <div class="medal">🥈</div>
+                <div class="rank_title">區域物流經理</div>
+
+                <h2 class="rank_name">{{ players.1.user.username }}</h2>
+                <p>💰 {{ players.1.money }}</p>
+                <p>📦 Lv.{{ players.1.level }}</p>
+                <p>📅 Day {{ players.1.day }}</p>
+            </div>
+            {% endif %}
+
+            <!-- 第一名 -->
+            {% if players|length >= 1 %}
+            <div class="podium_item gold">
+                <div class="medal">🥇</div>
+                <div class="rank_title">倉儲大亨</div>
+
+                <h2 class="rank_name">{{ players.0.user.username }}</h2>
+                <p>💰 {{ players.0.money }}</p>
+                <p>📦 Lv.{{ players.0.level }}</p>
+                <p>📅 Day {{ players.0.day }}</p>
+            </div>
+            {% endif %}
+
+            <!-- 第三名 -->
+            {% if players|length >= 3 %}
+            <div class="podium_item bronze">
+                <div class="medal">🥉</div>
+                <div class="rank_title">資深倉庫主管</div>
+
+                <h2 class="rank_name">{{ players.2.user.username }}</h2>
+                <p>💰 {{ players.2.money }}</p>
+                <p>📦 Lv.{{ players.2.level }}</p>
+                <p>📅 Day {{ players.2.day }}</p>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+        <div class="rank_list">
+
+            {% for player in players %}
+
+            {% if forloop.counter > 3 %}
+
+            <div class="rank_row">
+
+                <div>
+                    #{{ forloop.counter }}
+                    {{ player.user.username }}
+                </div>
+
+                <div>
+                    💰 {{ player.money }}
+                </div>
+
+            </div>
+
+            {% endif %}
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+{% endblock %}

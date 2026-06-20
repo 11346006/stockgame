@@ -1,0 +1,75 @@
+{% load static %}
+
+<html>
+
+<head>
+    <title>庫存管理遊戲</title>
+    <link rel="stylesheet"
+          href="{% static 'css/login.css' %}">
+</head>
+
+<body>
+
+<div class="login_bg">
+
+    <div class="login_card">
+
+        <div class="logo">
+            📦
+        </div>
+
+        <h1>Warehouse Manager</h1>
+
+        <p class="subtitle">
+            庫存管理模擬系統
+        </p>
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            <div class="input_group">
+
+                <label>
+                    👤 員工帳號
+                </label>
+
+                <input
+                    name="username"
+                    placeholder="請輸入學號"
+                    required
+                >
+
+            </div>
+
+            <div class="input_group">
+
+                <label>
+                    🔒 登入密碼
+                </label>
+
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="請輸入密碼"
+                    required
+                >
+
+            </div>
+
+            <button
+                type="submit"
+                class="login_btn"
+            >
+                進入管理中心
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

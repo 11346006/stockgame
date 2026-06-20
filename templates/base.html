@@ -1,0 +1,104 @@
+{% load static %}
+
+
+<html>
+
+<head>
+    <title>庫存管理遊戲</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+</head>
+
+<body>
+    <header>
+        <nav>
+            <h1 class="title"><a href="{% url 'home' %}">庫存管理遊戲</a></h1>
+            <ul class="nav_ul">
+                <li>
+                    <a href="{% url 'achievements' %}" class="nav_ul_a">
+                        🏆 成就圖鑑
+                    </a>
+                </li>
+                <li><a href="{% url 'leaderboard' %}" class="nav_ul_a">排行榜</a></li>
+                <!-- <li><a href="#" class="nav_ul_a" onclick="showPopup()"> 事件公告</a></li> -->
+                <li>
+                    <h3>{{ request.user.username }}</h3>
+                </li>
+                <li><a href="{% url 'logout' %}" class="nav_ul_a">登出</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        {% block content %}
+        {% endblock content %}
+
+        <div id="toast-container"></div>
+
+        <script>
+            function showToast(msg, type) {
+                const div = document.createElement("div");
+                div.className = "toast " + type;
+                div.innerText = msg;
+                document.getElementById("toast-container").appendChild(div);
+                setTimeout(() => div.remove(), 3000);
+            }
+        </script>
+
+        {{ messages_json|json_script:"msg-data" }}
+
+        <script>
+            const msgElement = document.getElementById("msg-data");
+
+            if (msgElement) {
+                const data = JSON.parse(msgElement.textContent);
+
+                data.forEach(m => {
+                    showToast(m.message, m.tags);
+                });
+            }
+        </script>
+
+    </main>
+
+    <script>
+
+        function showPopup() {
+
+            document
+                .getElementById("eventPopup")
+                .style.display = "block";
+        }
+
+        function closePopup() {
+
+            document
+                .getElementById("eventPopup")
+                .style.display = "none";
+        }
+
+
+        const timerEl = document.getElementById("timer");
+
+        if (timerEl) {
+            let time = parseInt(timerEl.innerText);
+
+            setInterval(() => {
+                if (time > 0) {
+                    time--;
+                    timerEl.innerText = time;
+                }
+            }, 1000);
+        }
+        let timer = parseInt(document.getElementById("timer").innerText);
+
+        setInterval(() => {
+            timer--;
+            document.getElementById("timer").innerText = timer;
+
+            if (timer <= 0) {
+                location.reload();
+            }
+        }, 1000);
+    </script>
+</body>
+
+</html>

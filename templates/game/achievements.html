@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="achievement_page">
+
+    <h1 class="achievement_title">
+        🏆 成就圖鑑
+    </h1>
+
+    <div class="achievement_grid">
+
+        {% for a in achievement_list %}
+
+        <div class="
+            achievement_card
+            {% if a.unlocked %}
+                unlocked
+            {% else %}
+                locked
+            {% endif %}
+        ">
+
+            {% if a.unlocked %}
+
+                <div class="icon">
+                    🏆
+                </div>
+
+                <h3>
+                    {{ a.name }}
+                </h3>
+
+                <p>
+                    {{ a.desc }}
+                </p>
+
+            {% else %}
+
+                <div class="icon">
+                    🔒
+                </div>
+
+                <h3>
+                    ??????
+                </h3>
+
+                <p>
+                    尚未解鎖
+                </p>
+
+            {% endif %}
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}
