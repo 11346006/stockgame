@@ -102,7 +102,7 @@ class PlayerAchievement(models.Model):
 # 📦 訂單
 # =========================
 class Order(models.Model):
-    
+    player = models.ForeignKey(Player,on_delete=models.CASCADE)    
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
     quantity = models.IntegerField()

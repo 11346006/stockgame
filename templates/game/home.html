@@ -231,12 +231,15 @@ function nextAch() {
     }
 }
 
-if(localStorage.getItem("tutorial_done")){
+document.addEventListener("DOMContentLoaded", () => {
+
+    // console.log(queue);
+
     if (queue.length > 0) {
-        document.getElementById("achPopup").style.display = "flex";
         showAch();
     }
-}
+
+});
 </script>
 
 {% if messages %}

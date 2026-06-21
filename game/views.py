@@ -39,10 +39,6 @@ def home(request):
         return redirect("login")
 
     player = Player.objects.get(user=request.user)
-    if not player.phase_start or player.phase_start is None:
-        player.phase_start = timezone.now()
-        player.save()
-
     if not player.phase_start:
         player.phase = "buy"
         player.phase_start = timezone.now()
@@ -55,19 +51,7 @@ def home(request):
         player.save()
     update_phase(player)
 
-    tutorial_done = request.session.get("tutorial_done", False)
-    # ======================
-    # ⏱ 統一計算時間（不要分支）
-    # ======================
-    total_time = 30
-
-    elapsed = (timezone.now() - player.phase_start).total_seconds()
-    remaining = max(0, total_time - int(elapsed))
-
-    is_tutorial = not tutorial_done
-
-
-
+      
     # ======================
     # 1. 訂單生成
     # ======================
@@ -75,7 +59,7 @@ def home(request):
 
         ORDER_LIMIT = 8  # 你想要幾張就改這裡
 
-        current = Order.objects.filter(completed=False).count()
+        current = Order.objects.filter(player=player,completed=False).count()
 
         need = ORDER_LIMIT - current
 
@@ -92,11 +76,12 @@ def home(request):
             qty = random.randint(1, 10)
 
             Order.objects.create(
+                player=player,
                 product=product,
                 quantity=qty,
                 reward=qty * product.price * 3,
                 customer_name=random.choice([
-                    "小明", "阿強", "AI客戶", "批發商"
+                    "小明", "阿強", "AI客戶", "批發商","小白","小菜","小宥","老王","陳先生","老人","小黑"
                 ]),
                 snapshot=product.image
             )
@@ -111,7 +96,10 @@ def home(request):
     # ======================
     # 3. 訂單
     # ======================
-    orders = Order.objects.filter(completed=False)
+    orders = Order.objects.filter(
+        player=player,
+        completed=False
+    )
 
     # ======================
     # 4. EXP
@@ -122,12 +110,13 @@ def home(request):
     # ======================
     # 5. 時間
     # ======================
+    tutorial_done = request.session.get("tutorial_done", False)  
     total_time = 30
 
     elapsed = (timezone.now() - player.phase_start).total_seconds()
 
     remaining = max(0, total_time - int(elapsed))
-
+    is_tutorial = not tutorial_done
     # ======================
     # 6. 📦 安全 inventory（重點修正）
     # ======================
@@ -164,6 +153,10 @@ def home(request):
             "qty": total
         })
     new_achievements = check_achievements(player) or []
+
+    print("===== NEW ACH =====")
+    print(new_achievements)
+
     request.session["achievement_queue"] = new_achievements
     request.session.modified = True
     # for a in new_achievements:
@@ -356,7 +349,11 @@ def get_event(player):
 def deliver_order(request, order_id):
 
     player = Player.objects.get(user=request.user)
-    order = Order.objects.get(id=order_id)
+    order = get_object_or_404(
+        Order,
+        id=order_id,
+        player=player
+    )
 
     inv = player.inventory or {}
     pid = str(order.product.id)
@@ -510,7 +507,7 @@ def generate_order(player):
 
     event = get_active_event()
 
-    if Order.objects.filter(completed=False).count() < 5:
+    if Order.objects.filter(player=player,completed=False).count() < 5:
 
         product = ai_select_product(player, event)
 
@@ -524,11 +521,12 @@ def generate_order(player):
         )
 
         Order.objects.create(
+            player=player,
             product=product,
             quantity=qty,
             reward=reward,
             customer_name=random.choice([
-                "AI客戶", "批發商", "便利商店", "企業訂單"
+                "AI客戶", "批發商", "便利商店", "企業訂單","小白","小菜","小宥","老王","陳先生","老人","小黑"
             ]),
             snapshot=product.image
         )
@@ -541,7 +539,10 @@ def get_hot_products():
 
     hot = defaultdict(int)
 
-    orders = Order.objects.filter(completed=True)
+    orders = Order.objects.filter(
+        player=player,
+        completed=False
+    )
 
     for o in orders:
         hot[o.product] += o.quantity
@@ -570,7 +571,7 @@ def check_achievements(player):
 
     achievements = [
         ("第一天營業",
-         player.day >= 1,"成功經營一天",
+         player.day >= 2,"成功經營一天",
          100),
 
         ("營業一週",
@@ -582,7 +583,7 @@ def check_achievements(player):
          2000),
 
         ("第一桶金",
-         player.money >= 1000,"持有1000金幣",
+         player.money >= 5000,"持有5000金幣",
          200),
 
         ("小富翁",
@@ -592,10 +593,6 @@ def check_achievements(player):
         ("大富翁",
          player.money >= 100000,"持有100000金幣",
          5000),
-        ("大富翁",
-         player.money >= 100000,"完成第一次訂單",
-         5000),
-
         ("第一次出貨",
          player.total_orders >= 1,"完成1次訂單",
          150),
@@ -641,7 +638,7 @@ def check_achievements(player):
         player.total_profit >= 77777,"利潤達77777",
         7777),
         ("不可能的任務",
-        player.money >= 10000000 & player.total_profit >= 10000000,"不可能的任務",
+        player.money >= 10000000 and player.total_profit >= 10000000,"不可能的任務",
         100000),
         ("我是作者",player.user.username == "11346006" ,"11346006特別專屬成就", 100000),
     ]
@@ -649,7 +646,7 @@ def check_achievements(player):
     for name, condition, desc, reward in achievements:
 
         if condition and name not in unlocked:
-
+            print("解鎖：", name)
             ach, _ = Achievement.objects.get_or_create(
                 name=name,
                 defaults={"reward": reward}
@@ -667,11 +664,10 @@ def check_achievements(player):
                 "desc": desc,
                 "reward": reward
             })
-
+            print("new_unlocks =", new_unlocks)
     player.save()
 
     return new_unlocks
-
 
 def refresh_orders(request):
 
@@ -691,7 +687,10 @@ def refresh_orders(request):
     player.save()
 
     # 🧹 刪除未完成訂單
-    Order.objects.filter(completed=False).delete()
+    Order.objects.filter(
+        player=player,
+        completed=False
+    ).delete()
 
     # 🤖 重新生成訂單（5筆）
     for _ in range(5):
@@ -710,11 +709,12 @@ def refresh_orders(request):
         reward = int(qty * product.price * random.uniform(2.0, 3.5))
 
         Order.objects.create(
+            player=player,
             product=product,
             quantity=qty,
             reward=reward,
             customer_name=random.choice([
-                "小明", "阿強", "AI客戶", "批發商", "企業訂單"
+                "小明", "阿強", "AI客戶", "批發商", "企業訂單","小白","小菜","小宥","老王","陳先生","老人","小黑"
             ]),
             snapshot=product.image
         )
