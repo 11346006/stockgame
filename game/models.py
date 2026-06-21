@@ -23,7 +23,7 @@ class Product(models.Model):
 # =========================
 class Player(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-
+    tutorial_done = models.BooleanField(default=False)
     money = models.IntegerField(default=1000)
     level = models.IntegerField(default=1)
     exp = models.IntegerField(default=0)

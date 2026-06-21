@@ -34,8 +34,7 @@
         {% block content %}
         {% endblock content %}
 
-        <div id="toast-container"></div>
-
+        {{ messages_json|json_script:"msg-data" }}
         <script>
             function showToast(msg, type) {
                 const div = document.createElement("div");
@@ -45,9 +44,6 @@
                 setTimeout(() => div.remove(), 3000);
             }
         </script>
-
-        {{ messages_json|json_script:"msg-data" }}
-
         <script>
             const msgElement = document.getElementById("msg-data");
 
@@ -63,23 +59,23 @@
     </main>
 
     <script>
-        function showPopup() {
+        let timerStarted = false;
 
-            document
-                .getElementById("eventPopup")
-                .style.display = "block";
-        }
+        function startTimer() {
+            if (timerStarted) return;
+            timerStarted = true;
 
-        function closePopup() {
+            const timerEl = document.getElementById("timer");
+            if (!timerEl) return;
 
-            document
-                .getElementById("eventPopup")
-                .style.display = "none";
-        }
-        let timerEl = document.getElementById("timer");
+            let time = Number(timerEl.innerText.trim());
 
-        if (timerEl) {
-            let time = parseInt(timerEl.innerText);
+            console.log("timer start:", time);
+
+            if (isNaN(time)) {
+                console.error("timer 不是數字:", timerEl.innerText);
+                return;
+            }
 
             setInterval(() => {
                 time--;
@@ -92,6 +88,75 @@
                 timerEl.innerText = time;
             }, 1000);
         }
+        const tutorialSteps = [
+            "1/6 🎮 歡迎來到《庫存管理模擬器》！\n 你將經營一間倉庫公司。",
+
+            "2/6 📦 在【備貨階段】，你可以進貨商品，\n建立你的庫存。",
+
+            "3/6 🚚 在【接單階段】，客戶會下訂單，\n記得準時出貨！",
+
+            "4/6 💰 每次成功出貨都能獲得金幣與經驗值，\n用來升級公司。",
+
+            "5/6 ⭐ 升級後會解鎖更多商品與更大倉庫容量，\n挑戰更高收益！",
+
+            "6/6 🎉 好好經營你的物流帝國吧，\n祝你成為最強倉庫大亨！"
+        ];
+
+        let index = 0;
+
+        function renderTutorial() {
+            const box = document.getElementById("tutorial");
+            const text = document.getElementById("tutorialText");
+
+            console.log("BOX:", box);
+            console.log("TEXT:", text);
+
+            if (!box || !text) {
+                console.log("MISSING DOM");
+                return;
+            }
+
+            box.style.display = "flex";
+            text.innerText = tutorialSteps[index];
+        }
+
+        function nextTutorial() {
+            index++;
+
+            if (index >= tutorialSteps.length) {
+
+                fetch("{% url 'finish_tutorial' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    }
+                }).then(() => {
+                    document.getElementById("tutorial").style.display = "none";
+                    startTimer(); // ✅ 只在「最後一步」才啟動
+                });
+
+                return;
+            }
+
+            renderTutorial();
+        }
+
+        function startTutorial() {
+            console.log("START TUTORIAL FIRED");
+            index = 0;
+            renderTutorial();
+        }
+        document.addEventListener("DOMContentLoaded", () => {
+
+            const isTutorial = "{{ is_tutorial|yesno:'true,false' }}" === "true";
+
+            if (isTutorial) {
+                startTutorial();
+            } else {
+                startTimer();
+            }
+
+        });
     </script>
 </body>
 

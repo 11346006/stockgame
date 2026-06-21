@@ -16,6 +16,7 @@ from django.contrib import messages
 from collections import defaultdict
 from .game_engine import game_tick
 from django.contrib.messages import get_messages
+
 def calc_inventory(inv):
     total = 0
 
@@ -54,7 +55,18 @@ def home(request):
         player.save()
     update_phase(player)
 
-    
+    tutorial_done = request.session.get("tutorial_done", False)
+    # ======================
+    # ⏱ 統一計算時間（不要分支）
+    # ======================
+    total_time = 30
+
+    elapsed = (timezone.now() - player.phase_start).total_seconds()
+    remaining = max(0, total_time - int(elapsed))
+
+    is_tutorial = not tutorial_done
+
+
 
     # ======================
     # 1. 訂單生成
@@ -188,6 +200,8 @@ def home(request):
         "capacity": get_capacity(player.level),
         "messages_json": messages_list,
         "is_dev": is_dev,
+        "tutorial_done": tutorial_done,
+        "is_tutorial": is_tutorial,
     })
 
 def buy_product(request, product_id):
@@ -276,10 +290,10 @@ def user_login(request):
             password=password
         )
 
+
         if user:
 
             auth_login(request, user)
-
             return redirect("home")
 
     return render(request, "game/login.html")
@@ -773,6 +787,8 @@ def achievements(request):
     )
 
 
-
-
+def finish_tutorial(request):
+    request.session["tutorial_done"] = True
+    request.session.modified = True
+    return JsonResponse({"success": True})
 

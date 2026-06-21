@@ -564,3 +564,107 @@ aside{
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+
+/*  */
+
+
+/* 背景遮罩 */
+#tutorial {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+
+    display: none;
+
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999;
+}
+
+/* 教學視窗 */
+.tutorial-box {
+
+    width: 550px;
+    max-width: 90%;
+
+    background: #ffffff;
+
+    border-radius: 18px;
+
+    padding: 35px;
+
+    box-shadow: 0 15px 40px rgba(0,0,0,.35);
+
+    text-align: center;
+
+    animation: tutorialShow .3s ease;
+}
+
+/* 標題 */
+.tutorial-box h2{
+
+    margin-bottom:20px;
+
+    color:#2c3e50;
+
+    font-size:32px;
+}
+
+/* 內容 */
+#tutorialText{
+
+    font-size:22px;
+
+    line-height:1.8;
+
+    min-height:120px;
+
+    color:#555;
+
+    margin-bottom:30px;
+}
+
+/* 按鈕 */
+.tutorial-box button{
+
+    background:#4CAF50;
+
+    color:white;
+
+    border:none;
+
+    padding:14px 40px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-size:20px;
+
+    transition:.25s;
+}
+
+.tutorial-box button:hover{
+
+    transform:scale(1.05);
+
+    background:#43a047;
+}
+
+/* 動畫 */
+@keyframes tutorialShow{
+
+    from{
+        opacity:0;
+        transform:translateY(30px) scale(.9);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+
+}
+

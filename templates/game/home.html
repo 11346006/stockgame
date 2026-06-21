@@ -158,28 +158,17 @@
 </aside>
 <div id="toast-container"></div>
 
-<!-- <div id="eventPopup" class="popup">
+<div id="tutorial">
+    <div class="tutorial-box">
+        <h2>📖 新手教學</h2>
 
-    <div class="popup_header">
-        {% if event %}
-        <p>{{ event.title }} - {{ event.description }}</p>
-        {% else %}
-        <p>正常市場</p>
-        {% endif %}
-        <a href="#" onclick="closePopup()">X</a>
+        <p id="tutorialStep"></p>
+        <p id="tutorialText"></p>
+
+        <button onclick="nextTutorial()">下一步</button>
     </div>
-    <div class="popup_body">
-        {% if event %}
+</div>
 
-
-        <p>{{ event.description }}</p>
-
-        {% else %}
-
-
-        {% endif %}
-    </div>
-</div> -->
 
 <div id="achPopup" class="ach-popup">
     <div class="ach-box">
@@ -197,6 +186,9 @@
 </div>
 {{ request.session.achievement_queue|default:"[]"|json_script:"ach-data" }}
 <script>
+
+
+
 let queue = [];
 
 const el = document.getElementById("ach-data");
@@ -239,12 +231,12 @@ function nextAch() {
     }
 }
 
-window.addEventListener("load", () => {
+if(localStorage.getItem("tutorial_done")){
     if (queue.length > 0) {
         document.getElementById("achPopup").style.display = "flex";
         showAch();
     }
-});
+}
 </script>
 
 {% if messages %}

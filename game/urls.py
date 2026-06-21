@@ -40,5 +40,5 @@ path(
     "achievements/",
     views.achievements,
     name="achievements"
-),
+),path("finish-tutorial/", views.finish_tutorial, name="finish_tutorial"),
 ]
