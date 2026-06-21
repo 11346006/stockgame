@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load static %}
+
 
 {% block content %}
 
@@ -46,7 +48,7 @@
                 </h3>
 
                 <p>
-                    尚未解鎖
+                    {{ a.desc }}
                 </p>
 
             {% endif %}

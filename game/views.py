@@ -34,11 +34,13 @@ def calc_inventory(inv):
     return total
 
 def home(request):
-
     if not request.user.is_authenticated:
         return redirect("login")
 
     player = Player.objects.get(user=request.user)
+    if not player.phase_start or player.phase_start is None:
+        player.phase_start = timezone.now()
+        player.save()
 
     if not player.phase_start:
         player.phase = "buy"
@@ -46,8 +48,13 @@ def home(request):
         player.save()
 
     # 🧪 debug mode 不更新時間
-    if not getattr(player, "debug_mode", False):
-        update_phase(player)
+    if player.phase not in ["buy", "sell"]:
+        player.phase = "buy"
+        player.phase_start = timezone.now()
+        player.save()
+    update_phase(player)
+
+    
 
     # ======================
     # 1. 訂單生成
@@ -103,15 +110,11 @@ def home(request):
     # ======================
     # 5. 時間
     # ======================
-    now = timezone.now()
+    total_time = 30
 
-    total_time = 120 if player.phase == "buy" else 180
+    elapsed = (timezone.now() - player.phase_start).total_seconds()
 
-    remaining = total_time - int(
-        (now - player.phase_start).total_seconds()
-    )
-
-    remaining = max(0, remaining)
+    remaining = max(0, total_time - int(elapsed))
 
     # ======================
     # 6. 📦 安全 inventory（重點修正）
@@ -148,14 +151,14 @@ def home(request):
             "name": product.name if product else f"未知商品({pid})",
             "qty": total
         })
-
-    new_achievements = check_achievements(player)
-
-    for a in new_achievements:
-        messages.success(
-            request,
-            f"🏆 成就解鎖：{a['name']} +{a['reward']}金幣"
-        )
+    new_achievements = check_achievements(player) or []
+    request.session["achievement_queue"] = new_achievements
+    request.session.modified = True
+    # for a in new_achievements:
+    #     messages.success(
+    #         request,
+    #         f"🏆 成就解鎖：{a['name']} +{a['reward']}金幣"
+    #     )
     
     storage = get_messages(request)
 
@@ -222,15 +225,15 @@ def buy_product(request, product_id):
 
     inv[pid].append({
         "qty": quantity,
-        "expire": 120
+        "expire": 30
     })
-
     player.inventory = inv
 
     player.exp += 5
     check_level_up(player)
     player.save()
 
+    messages.success(request, f"📦 訂貨成功：{product.name} x{quantity}")
     return redirect("home")
 
 def register(request):
@@ -387,10 +390,17 @@ def deliver_order(request, order_id):
     player.inventory = inv
 
     # 💰 結算
+    cost = order.product.price * order.quantity
+    profit = order.reward - cost
+
     player.money += order.reward
     player.exp += order.quantity * 10
-    order.completed = True
 
+    player.total_orders += 1
+    player.total_sales += order.reward
+    player.total_profit += profit
+
+    order.completed = True
     check_level_up(player)
 
     player.save()
@@ -414,8 +424,8 @@ def update_phase(player):
 
     elapsed = (now - player.phase_start).total_seconds()
 
-    BUY_TIME = 120
-    SELL_TIME = 180
+    BUY_TIME = 30
+    SELL_TIME = 30
 
     if player.phase == "buy":
 
@@ -431,7 +441,7 @@ def update_phase(player):
             player.phase_start = now
             player.day += 1
             player.save()
-            
+
 def toggle_debug(request):
     player = Player.objects.get(user=request.user)
 
@@ -545,65 +555,90 @@ def check_achievements(player):
     new_unlocks = []
 
     achievements = [
-
         ("第一天營業",
-         player.day >= 1,
+         player.day >= 1,"成功經營一天",
          100),
 
         ("營業一週",
-         player.day >= 7,
+         player.day >= 7,"成功經營7天",
          500),
 
         ("營業一個月",
-         player.day >= 30,
+         player.day >= 30,"成功經營30天",
          2000),
 
         ("第一桶金",
-         player.money >= 1000,
+         player.money >= 1000,"持有1000金幣",
          200),
 
         ("小富翁",
-         player.money >= 10000,
+         player.money >= 10000,"持有10000金幣",
          1000),
 
         ("大富翁",
-         player.money >= 100000,
+         player.money >= 100000,"持有100000金幣",
+         5000),
+        ("大富翁",
+         player.money >= 100000,"完成第一次訂單",
          5000),
 
         ("第一次出貨",
-         player.total_orders >= 1,
+         player.total_orders >= 1,"完成1次訂單",
          150),
 
         ("出貨達人",
-         player.total_orders >= 100,
+         player.total_orders >= 100,"完成100次訂單",
          1000),
 
         ("物流中心",
-         player.total_orders >= 1000,
+         player.total_orders >= 1000,"完成1000次訂單",
          5000),
 
         ("新手店長",
-         player.level >= 5,
+         player.level >= 5,"達到5級",
          500),
 
         ("資深店長",
-         player.level >= 10,
+         player.level >= 10,"達到10級",
          2000),
 
         ("傳奇店長",
-         player.level >= 20,
+         player.level >= 20,"達到20級",
          10000),
+        ("銷售新人",
+        player.total_sales >= 1000,"銷售金額達1000",
+        100),
+        ("銷售中人",
+        player.total_sales >= 10000,"銷售金額達10000",
+        1000),
+        ("銷售神人",
+        player.total_sales >= 100000,"銷售金額達100000",
+        10000),
+        ("第一筆利潤",
+        player.total_profit >= 100,"利潤達100",
+        10),
+        ("錢錢進我口袋",
+        player.total_profit >= 1000,"利潤達1000",
+        1000),
+        ("我是利潤富翁",
+        player.total_profit >= 50000,"利潤達50000",
+        5000),
+        ("7777",
+        player.total_profit >= 77777,"利潤達77777",
+        7777),
+        ("不可能的任務",
+        player.money >= 10000000 & player.total_profit >= 10000000,"不可能的任務",
+        100000),
+        ("我是作者",player.user.username == "11346006" ,"11346006特別專屬成就", 100000),
     ]
 
-    for name, condition, reward in achievements:
+    for name, condition, desc, reward in achievements:
 
         if condition and name not in unlocked:
 
             ach, _ = Achievement.objects.get_or_create(
                 name=name,
-                defaults={
-                    "reward": reward
-                }
+                defaults={"reward": reward}
             )
 
             PlayerAchievement.objects.create(
@@ -615,6 +650,7 @@ def check_achievements(player):
 
             new_unlocks.append({
                 "name": name,
+                "desc": desc,
                 "reward": reward
             })
 
@@ -707,6 +743,15 @@ def achievements(request):
         ("新手店長", "達到5級"),
         ("資深店長", "達到10級"),
         ("傳奇店長", "達到20級"),
+        ("銷售新人","銷售金額達1000"),
+        ("銷售中人","銷售金額達10000"),
+        ("銷售神人","銷售金額達100000"),
+        ("第一筆利潤","利潤達100"),
+        ("錢錢進我口袋","利潤達1000"),
+        ("我是利潤富翁","利潤達50000"),
+        ("7777","利潤達77777"),
+        ("不可能的任務","不可能的任務"),
+        ("我是作者","11346006特別專屬成就"),
     ]
 
     achievement_list = []

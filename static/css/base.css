@@ -79,7 +79,7 @@ main{
     padding:0 10px;
     display: flex;
     justify-content: center;
-    /* margin-bottom: 10px; */
+    margin-bottom: 10px;
     border-radius: 5px;
     
 }
@@ -163,7 +163,6 @@ main{
     text-align: center;
 }
 .order_submit{
-    margin-top:10px;
 
     background:#4caf50;
 
@@ -505,4 +504,63 @@ aside{
 
 .bronze .rank_title{
     color:#8a4f1d;
+}
+
+/*  */
+
+.ach-popup {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+    z-index: 9999;
+}
+
+.ach-box {
+    background: linear-gradient(135deg, #1a1a1a, #2c2c2c);
+    color: gold;
+    padding: 35px 50px;
+    border-radius: 18px;
+    text-align: center;
+    box-shadow: 0 0 25px gold;
+    animation: pop 0.4s ease;
+    min-width: 280px;
+}
+
+.ach-box h2 {
+    margin-bottom: 10px;
+}
+
+.ach-box p {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.ach-btn {
+    background: gold;
+    border: none;
+    padding: 10px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: 0.2s;
+}
+
+.ach-btn:hover {
+    transform: scale(1.05);
+    background: orange;
+}
+
+@keyframes pop {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }

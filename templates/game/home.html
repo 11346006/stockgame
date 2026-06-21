@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
 
 <section class="main_Leftbody">
@@ -64,17 +65,13 @@
 
         <div class="card">
 
-            <div>
-                {% if product.image %}
-                <img src="{{ product.image.url }}" class="card_img">
-                {% endif %}
-            </div>
+            <img src="{% static product.image %}" class="card_img">
 
             <div class="card_body">
 
                 <h3 class="card_title">{{ product.name }}</h3>
 
-                <p style="margin-bottom: 5px;">售價：{{ product.price }}</p>
+                <p style="margin-bottom: 5px;">成本：{{ product.price }}</p>
 
                 <form action="{% url 'buy_product' product.id %}" method="post">
 
@@ -110,9 +107,7 @@
 
         <div class="card">
             <div>
-                {% if order.product.image %}
-                <img src="{{ order.product.image.url }}" class="card_img">
-                {% endif %}
+                <img src="{% static order.product.image %}" class="card_img">
             </div>
             <div class="card_body">
 
@@ -124,7 +119,7 @@
 
                 <p>獎勵：{{ order.reward }}</p>
 
-                <a href="{% url 'deliver_order' order.id %}" class="order_submit">
+                <a href="{% url 'deliver_order' order.id %}" class="order_submit" >
                     <button class="order_submit">出貨</button>
                 </a>
 
@@ -163,7 +158,7 @@
 </aside>
 <div id="toast-container"></div>
 
-<div id="eventPopup" class="popup">
+<!-- <div id="eventPopup" class="popup">
 
     <div class="popup_header">
         {% if event %}
@@ -184,7 +179,74 @@
 
         {% endif %}
     </div>
+</div> -->
+
+<div id="achPopup" class="ach-popup">
+    <div class="ach-box">
+        <h2>🏆 成就解鎖</h2>
+
+        <h3 id="achTitle"></h3>
+        <p id="achDesc"></p>
+
+        <p id="achReward"></p>
+
+        <button onclick="nextAch()" class="ach-btn">
+            OK
+        </button>
+    </div>
 </div>
+{{ request.session.achievement_queue|default:"[]"|json_script:"ach-data" }}
+<script>
+let queue = [];
+
+const el = document.getElementById("ach-data");
+
+if (el) {
+    queue = JSON.parse(el.textContent);
+}
+
+if (!Array.isArray(queue)) {
+    queue = [];
+}
+
+let showing = false;
+
+function showAch() {
+    if (queue.length === 0) return;
+
+    document.getElementById("achPopup").style.display = "flex";
+
+    document.getElementById("achTitle").innerText =
+        "✨ " + queue[0].name;
+
+    document.getElementById("achDesc").innerText =
+        queue[0].desc || "達成條件！";
+
+    document.getElementById("achReward").innerText =
+        "💰 +" + queue[0].reward + " 金幣";
+
+    showing = true;
+}
+function nextAch() {
+    if (!Array.isArray(queue)) return;
+
+    queue.shift();
+
+    if (queue.length === 0) {
+        document.getElementById("achPopup").style.display = "none";
+    } else {
+        showAch();
+    }
+}
+
+window.addEventListener("load", () => {
+    if (queue.length > 0) {
+        document.getElementById("achPopup").style.display = "flex";
+        showAch();
+    }
+});
+</script>
+
 {% if messages %}
 {% for message in messages %}
 <script>

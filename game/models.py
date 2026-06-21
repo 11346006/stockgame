@@ -8,19 +8,14 @@ from django.contrib.auth.models import User
 # =========================
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    # stock = models.IntegerField(default=0)
     price = models.IntegerField(default=0)
 
-    image = models.ImageField(
-        upload_to="products/",
-        blank=True,
-        null=True
+    image = models.CharField(
+        max_length=100,
+        default="images/default.png"
     )
 
     unlock_level = models.IntegerField(default=1)
-
-    def __str__(self):
-        return self.name
 
 
 # =========================

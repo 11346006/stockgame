@@ -9,6 +9,9 @@
 </head>
 
 <body>
+    <!-- <audio id="bgm" loop autoplay volume="0.1">
+        <source src="{% static 'music/bgm.mp3' %}" type="audio/mpeg">
+    </audio> -->
     <header>
         <nav>
             <h1 class="title"><a href="{% url 'home' %}">庫存管理遊戲</a></h1>
@@ -60,7 +63,6 @@
     </main>
 
     <script>
-
         function showPopup() {
 
             document
@@ -74,30 +76,22 @@
                 .getElementById("eventPopup")
                 .style.display = "none";
         }
-
-
-        const timerEl = document.getElementById("timer");
+        let timerEl = document.getElementById("timer");
 
         if (timerEl) {
             let time = parseInt(timerEl.innerText);
 
             setInterval(() => {
-                if (time > 0) {
-                    time--;
-                    timerEl.innerText = time;
+                time--;
+
+                if (time <= 0) {
+                    location.reload();
+                    return;
                 }
+
+                timerEl.innerText = time;
             }, 1000);
         }
-        let timer = parseInt(document.getElementById("timer").innerText);
-
-        setInterval(() => {
-            timer--;
-            document.getElementById("timer").innerText = timer;
-
-            if (timer <= 0) {
-                location.reload();
-            }
-        }, 1000);
     </script>
 </body>
 
