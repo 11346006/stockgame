@@ -71,7 +71,7 @@
 
                 <h3 class="card_title">{{ product.name }}</h3>
 
-                <p style="margin-bottom: 5px;">成本：{{ product.price }}</p>
+                <p style="margin-bottom: 5px;">成本：{{ product.price }}金幣</p>
 
                 <form action="{% url 'buy_product' product.id %}" method="post">
 
@@ -117,7 +117,7 @@
 
                 <p>數量：{{ order.quantity }}</p>
 
-                <p>獎勵：{{ order.reward }}</p>
+                <p>獎勵：{{ order.reward }}金幣</p>
 
                 <a href="{% url 'deliver_order' order.id %}" class="order_submit" >
                     <button class="order_submit">出貨</button>
