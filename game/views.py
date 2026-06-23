@@ -39,17 +39,21 @@ def home(request):
         return redirect("login")
 
     player = Player.objects.get(user=request.user)
-    if not player.phase_start:
-        player.phase = "buy"
-        player.phase_start = timezone.now()
-        player.save()
-
-    # 🧪 debug mode 不更新時間
+    print(
+        player.user.username,
+        player.phase,
+        player.phase_start,
+        timezone.now(),
+        (timezone.now() - player.phase_start).total_seconds()
+    )
     if player.phase not in ["buy", "sell"]:
         player.phase = "buy"
         player.phase_start = timezone.now()
         player.save()
-    update_phase(player)
+
+    tutorial_done = request.session.get("tutorial_done", False)
+    if tutorial_done:
+        update_phase(player)
 
       
     # ======================
@@ -571,7 +575,7 @@ def check_achievements(player):
 
     achievements = [
         ("第一天營業",
-         player.day >= 2,"成功經營一天",
+         player.day >= 2,"成功經營1天",
          100),
 
         ("營業一週",
@@ -742,7 +746,7 @@ def achievements(request):
 
     all_achievements = [
 
-        ("第一天營業", "成功經營一天"),
+        ("第一天營業", "成功經營1天"),
         ("營業一週", "成功經營7天"),
         ("營業一個月", "成功經營30天"),
 
@@ -750,7 +754,7 @@ def achievements(request):
         ("小富翁", "持有10000金幣"),
         ("大富翁", "持有100000金幣"),
 
-        ("第一次出貨", "完成第一次訂單"),
+        ("第一次出貨", "完成第1次訂單"),
         ("出貨達人", "完成100次訂單"),
         ("物流中心", "完成1000次訂單"),
 
@@ -788,7 +792,13 @@ def achievements(request):
 
 
 def finish_tutorial(request):
-    request.session["tutorial_done"] = True
-    request.session.modified = True
-    return JsonResponse({"success": True})
+    player = Player.objects.get(user=request.user)
 
+    player.tutorial_done = True
+    player.phase = "buy"
+    player.phase_start = timezone.now()
+    player.save()
+
+    request.session["tutorial_done"] = True
+
+    return JsonResponse({"success": True})
